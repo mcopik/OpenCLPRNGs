@@ -45,19 +45,31 @@ int create_program(cl_program * program, const char * program_name,cl_context * 
 	return 0;
 }
 
-int setArgs(cl_kernel kernel, const char * program_name,cl_context context,size_t workgroups_number) {
+typedef union {
+	//mwc64x
+	long seed;
+	//OpenCL_random
+	CL_MT prng;
+	//Random123
+	cl_mem inputBuffer;
+} argType;
+
+int setArgs(argType * arg,cl_kernel kernel, const char * program_name,cl_context context,size_t workgroups_number) {
+	srand(time(0));
 	if(!strcmp(program_name,"mwc64x")) {
-		long seed = time(0);
-        	clSetKernelArg(kernel, 0, sizeof(cl_ulong), (void *)&seed);
+		arg->seed = time(0);
+        	clSetKernelArg(kernel, 0, sizeof(cl_ulong), (void *)&arg->seed);
 	}
 	else if(!strcmp(program_name,"random123")) {
+		unsigned long seed[2] = { rand(), rand()};
+		arg->inputBuffer = clCreateBuffer(context,CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,sizeof(cl_ulong) * 2,seed,NULL);
+        	clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)arg->inputBuffer);
 	}
 	else if(!strcmp(program_name,"opencl_random")) {
-		CL_MT prng;
 		cl_int error_code;
-       		prng = CL_MT_init( context, workgroups_number, time(0), &error_code );
+       		arg->prng = CL_MT_init( context, workgroups_number, rand(), &error_code );
 		assert(error_code == CL_SUCCESS);
-		CL_MT_set_kernel_arg( prng, kernel, 0 );
+		CL_MT_set_kernel_arg( arg->prng, kernel, 0 );
 	}
 	else if(!strcmp(program_name,"mwc64x")) {
 	}
@@ -65,6 +77,17 @@ int setArgs(cl_kernel kernel, const char * program_name,cl_context context,size_
 		return 1;
 	}
 	return 0;
+}
+
+void cleanUpArg(argType *arg, const char * program_name) {
+	
+	if(!strcmp(program_name,"random123")) {
+		clReleaseMemObject(arg->inputBuffer);
+	}
+	else if(!strcmp(program_name,"opencl_random")) {
+		CL_MT_release(&arg->prng);
+	}
+	
 }
 
 int roundUp(int first,int second) {
@@ -140,7 +163,8 @@ int main(int argc,char ** argv) {
 	//memory objects
 	cl_mem outputBuffer = clCreateBuffer(context,CL_MEM_WRITE_ONLY,sizeof(cl_float) * globalWorkSize,NULL,&status);
 	//kernel args which will not change
-	assert(setArgs(kernel,kernel_name,context,gwSize[0]/lwSize[0]) == 0);
+	argType prngArg;
+	assert(setArgs(&prngArg,kernel,kernel_name,context,gwSize[0]/lwSize[0]) == 0);
         clSetKernelArg(kernel, 1, sizeof(cl_uint), (void *)&count);
         clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&outputBuffer);
 	assert(status == CL_SUCCESS);
@@ -195,6 +219,7 @@ int main(int argc,char ** argv) {
 	//clean up!
 	free(output);
 	free(devices);
+	cleanUpArg(&prngArg,kernel_name);
 	clReleaseKernel(kernel);
 	clReleaseMemObject(outputBuffer);
  	clReleaseProgram(program);

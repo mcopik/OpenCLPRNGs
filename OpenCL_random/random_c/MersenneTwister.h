@@ -115,7 +115,7 @@ inline cl_int CL_MT_device_mem_release( CL_MT *mt )
  * @param mt pointer to the CL_MT object which shall be released
  * @return CL_SUCCESS if the functions executes successfully. Otherwise an appropriate errorcode is returned.
  */
-inline cl_int CL_MT_release( CL_MT *mt )
+static inline cl_int CL_MT_release( CL_MT *mt )
 {
 	return CL_PRNG_release( (CL_PRNG *) mt );
 }

@@ -282,7 +282,7 @@ inline cl_int CL_PRNG_device_mem_release( CL_PRNG *const prng )
  * @param prng pointer to the CL_PRNG object which shall be released
  * @return CL_SUCCESS if the functions executes successfully. Otherwise an appropriate errorcode is returned.
  */
-inline cl_int CL_PRNG_release( CL_PRNG *prng )
+static inline cl_int CL_PRNG_release( CL_PRNG *prng )
 {
 	cl_int error_code = CL_SUCCESS;
 	if( prng->__info & __RND_DEVICE_ALLOC )
