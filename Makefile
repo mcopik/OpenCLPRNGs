@@ -5,10 +5,10 @@ CFLAGS=-std=c99 -Wall -c
 all: main
 
 main:	main.o
-	$(CC) main.o $(LFLAGS) -o main
+	$(CC) $^ $(LFLAGS) -o $@
 
 main.o:
 	$(CC) $(CFLAGS) main.c
 
 clean:
-	rm main
+	rm main.o

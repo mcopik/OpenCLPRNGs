@@ -13,6 +13,7 @@ __kernel void main(ulong seed,uint count,uint sampleOffset,__global float * resu
 		float x = ((float)MWC64X_NextUint(&rng))/0xFFFFFFFF;
 		sum += x;
 	}
+	sum /= count;
 	result[sampleOffset+get_global_id(0)] = sum;
 }
 	

@@ -5,6 +5,10 @@
 #include <string.h>
 #include <CL/cl.h>
 
+//OpenCL_random
+#include "OpenCL_random/random_c.h"
+#include "OpenCL_random/random_c/MersenneTwister.h"
+
 #define NUMBER_OF_ITERATIONS 10
 #define LOCAL_WORK_SIZE 128
 
@@ -41,7 +45,7 @@ int create_program(cl_program * program, const char * program_name,cl_context * 
 	return 0;
 }
 
-int setArgs(cl_kernel kernel, const char * program_name) {
+int setArgs(cl_kernel kernel, const char * program_name,cl_context context,size_t workgroups_number) {
 	if(!strcmp(program_name,"mwc64x")) {
 		long seed = time(0);
         	clSetKernelArg(kernel, 0, sizeof(cl_ulong), (void *)&seed);
@@ -49,6 +53,11 @@ int setArgs(cl_kernel kernel, const char * program_name) {
 	else if(!strcmp(program_name,"random123")) {
 	}
 	else if(!strcmp(program_name,"opencl_random")) {
+		CL_MT prng;
+		cl_int error_code;
+       		prng = CL_MT_init( context, workgroups_number, time(0), &error_code );
+		assert(error_code == CL_SUCCESS);
+		CL_MT_set_kernel_arg( prng, kernel, 0 );
 	}
 	else if(!strcmp(program_name,"mwc64x")) {
 	}
@@ -106,7 +115,7 @@ int main(int argc,char ** argv) {
 		return 1;
 	}
 	//build kernel
-	status = clBuildProgram(program,1, devices, "-Imwc64x/cl", NULL, NULL);
+	status = clBuildProgram(program,1, devices, "-Imwc64x/cl:OpenCL_random", NULL, NULL);
 	//check for kernel errors
 	if (status != CL_SUCCESS)
         {
@@ -131,7 +140,7 @@ int main(int argc,char ** argv) {
 	//memory objects
 	cl_mem outputBuffer = clCreateBuffer(context,CL_MEM_WRITE_ONLY,sizeof(cl_float) * globalWorkSize,NULL,&status);
 	//kernel args which will not change
-	assert(setArgs(kernel,kernel_name) == 0);
+	assert(setArgs(kernel,kernel_name,context,gwSize[0]/lwSize[0]) == 0);
         clSetKernelArg(kernel, 1, sizeof(cl_uint), (void *)&count);
         clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&outputBuffer);
 	assert(status == CL_SUCCESS);
@@ -140,8 +149,8 @@ int main(int argc,char ** argv) {
 	size_t executed = 0;
 	while(executed < globalWorkSize) {
 		//if it is possible to process smaller number of samples?
-		if((globalWorkSize-executed+1) <  numberOfSamplesPerIteration) {
-			gwSize[0] = roundUp(globalWorkSize-executed+1,LOCAL_WORK_SIZE);
+		if((globalWorkSize-executed) <  numberOfSamplesPerIteration) {
+			gwSize[0] = roundUp(globalWorkSize-executed,LOCAL_WORK_SIZE);
 		}
 		clSetKernelArg(kernel, 2, sizeof(cl_uint), (void *)&sampleOffset);
 		status = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, gwSize, lwSize, 0, NULL, NULL);
@@ -174,15 +183,13 @@ int main(int argc,char ** argv) {
 			max = output[i];
 		}
 	}
-	avg /= (globalWorkSize*count);
+	avg /= globalWorkSize;
 	float stdDev = 0.0f;
-	if(count == 1) {
-		//standard deviation
-		for(int i = 0;i < globalWorkSize;++i) {
-			stdDev += pow(output[i] - avg,2);
-		}
-		stdDev /= (globalWorkSize*count);
+	//standard deviation
+	for(int i = 0;i < globalWorkSize;++i) {
+		stdDev += pow(output[i] - avg,2);
 	}
+	stdDev /= globalWorkSize;
 	printf("Processing %d samples in %d iterations.\n Time %f seconds.\n Average value: %f.\n",globalWorkSize,NUMBER_OF_ITERATIONS,((float)(second-first))/1000.0f,avg);
 	if(count == 1){ 
 		printf("Standard deviation %f.\n Min %f.\n Max %f.\n",stdDev,min,max);
@@ -197,4 +204,3 @@ int main(int argc,char ** argv) {
 	clReleaseContext(context);
 	return 0;
 }
-
