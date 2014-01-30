@@ -1,14 +1,14 @@
 CC=gcc
 LFLAGS=-lm -lOpenCL
 CFLAGS=-std=c99 -Wall -c
-
+OBJECTS=main.o
 all: main
 
-main:	main.o
+main:	$(OBJECTS)
 	$(CC) $^ $(LFLAGS) -o $@
 
-main.o:
-	$(CC) $(CFLAGS) main.c
+%.o: %.c
+	$(CC) $< $(CFLAGS) -o $@
 
 clean:
 	rm main.o

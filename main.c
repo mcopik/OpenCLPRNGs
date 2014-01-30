@@ -115,7 +115,7 @@ int main(int argc,char ** argv) {
 		return 1;
 	}
 	//build kernel
-	status = clBuildProgram(program,1, devices, "-Imwc64x/cl:OpenCL_random", NULL, NULL);
+	status = clBuildProgram(program,1, devices, "-I mwc64x/cl -I OpenCL_random", NULL, NULL);
 	//check for kernel errors
 	if (status != CL_SUCCESS)
         {
@@ -191,9 +191,7 @@ int main(int argc,char ** argv) {
 	}
 	stdDev /= globalWorkSize;
 	printf("Processing %d samples in %d iterations.\n Time %f seconds.\n Average value: %f.\n",globalWorkSize,NUMBER_OF_ITERATIONS,((float)(second-first))/1000.0f,avg);
-	if(count == 1){ 
-		printf("Standard deviation %f.\n Min %f.\n Max %f.\n",stdDev,min,max);
-	}
+	printf("Standard deviation %f.\n Min %f.\n Max %f.\n",stdDev,min,max);
 	//clean up!
 	free(output);
 	free(devices);
