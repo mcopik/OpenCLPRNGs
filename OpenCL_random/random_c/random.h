@@ -190,7 +190,7 @@ inline static void __rnd_init( CL_PRNG *prng, cl_context context, size_t num_prn
  * @param[out] errcode_ret see clCreateBuffer
  * @param[in] length length of the state of one PRNG stream
  */
-inline void __cl_prng_load_serialized( CL_PRNG *r, CL_PRNG *prng, cl_context context, cl_int *errcode_ret, const int length )
+static inline void __cl_prng_load_serialized( CL_PRNG *r, CL_PRNG *prng, cl_context context, cl_int *errcode_ret, const int length )
 {
 	const int size = prng->__num_prngs * (length + 1);
 	r->__device_state = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(cl_uint) * (size + __OFFSET), prng->__host_state, errcode_ret );
@@ -214,7 +214,7 @@ inline void __cl_prng_load_serialized( CL_PRNG *r, CL_PRNG *prng, cl_context con
  * @param[in] length length of the state of one PRNG stream
  * @return returns CL_INVALID_MEM_OBJECT if the device buffer was released previously and otherwise it returns the return value of clEnqueueWriteBuffer
  */
-inline cl_int __cl_prng_deserialize( CL_PRNG *prng, cl_command_queue queue, cl_bool blocking_write, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event, const int length )
+static inline cl_int __cl_prng_deserialize( CL_PRNG *prng, cl_command_queue queue, cl_bool blocking_write, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event, const int length )
 {
 	const int size = (prng->__num_prngs * (length + 1) + __OFFSET) * sizeof(cl_uint);
 	cl_int ret = CL_INVALID_MEM_OBJECT;
@@ -236,7 +236,7 @@ inline cl_int __cl_prng_deserialize( CL_PRNG *prng, cl_command_queue queue, cl_b
  * @param[in] length length of the state of one PRNG stream
  * @return the return value of clEnqueueReadBuffer
  */
-inline cl_int __cl_prng_serialize( CL_PRNG *prng, cl_command_queue queue, cl_bool blocking_read, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event, const int length )
+static inline cl_int __cl_prng_serialize( CL_PRNG *prng, cl_command_queue queue, cl_bool blocking_read, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event, const int length )
 {
 	const int size = (prng->__num_prngs * (length + 1) + __OFFSET) * sizeof(cl_uint);
 	if( !prng->__host_state )
