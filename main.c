@@ -269,7 +269,7 @@ int main(int argc,char ** argv) {
 		stdDev += pow(output[i] - avg,2);
 	}
 	stdDev /= globalWorkSize;
-	printf("Processing %d samples in %d iterations.\n Time %f seconds.\n Average value: %f.\n",globalWorkSize,NUMBER_OF_ITERATIONS,((float)time)/1000000.0,avg);
+	printf("Processing %d samples in %d iterations.\n Time %f seconds.\n Average value: %f.\n",globalWorkSize,NUMBER_OF_ITERATIONS,((float)time)/1000000000.0,avg);
 	printf("Standard deviation %f.\n Min %f.\n Max %f.\n",stdDev,min,max);
 	//clean up!
 	free(output);
