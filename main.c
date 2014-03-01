@@ -34,14 +34,26 @@ int create_program(cl_program * program, const char * program_name,cl_context * 
 	if(!strcmp(program_name,"mwc64x")) {
 		file = fopen("mwc64x/sumKernel.cl","r");
 	}
+	else if(!strcmp(program_name,"mwc64x-random")) {
+		file = fopen("Random123/sumRandomKernel.cl","r");
+	}
 	else if(!strcmp(program_name,"random123")) {
 		file = fopen("Random123/sumKernel.cl","r");
+	}
+	else if(!strcmp(program_name,"random123-random")) {
+		file = fopen("Random123/sumRandomKernel.cl","r");
 	}
 	else if(!strcmp(program_name,"opencl_random")) {
 		file = fopen("OpenCL_random/sumKernel.cl","r");
 	}
+	else if(!strcmp(program_name,"opencl_random-random")) {
+		file = fopen("OpenCL_random/sumRandomKernel.cl","r");
+	}
 	else if(!strcmp(program_name,"park_miller")) {
 		file = fopen("Park_Miller/sumKernel.cl","r");
+	}
+	else if(!strcmp(program_name,"park_miller-random")) {
+		file = fopen("Park_Miller/sumRandomKernel.cl","r");
 	}
 	else {
 		return 1;
@@ -77,24 +89,24 @@ typedef union {
 
 int setArgs(argType * arg,cl_kernel kernel, const char * program_name,cl_context context,size_t workgroups_number) {
 	srand(time(0));
-	if(!strcmp(program_name,"mwc64x")) {
+	if(!strcmp(program_name,"mwc64x") || !strcmp(program_name,"mwc64x-random")) {
 		arg->seed = time(0);
         	clSetKernelArg(kernel, 0, sizeof(cl_ulong), (void *)&arg->seed);
 	}
-	else if(!strcmp(program_name,"random123")) {
+	else if(!strcmp(program_name,"random123") || !strcmp(program_name,"random123-random")) {
 		arg->random123.seed[0] = rand();
 		arg->random123.seed[1] = rand();
 		arg->random123.seed[2] = rand();
 		arg->random123.inputBuffer = clCreateBuffer(context,CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,sizeof(cl_ulong) * 2,arg->random123.seed,NULL);
         	clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&arg->random123.inputBuffer);
 	}
-	else if(!strcmp(program_name,"opencl_random")) {
+	else if(!strcmp(program_name,"opencl_random") || !strcmp(program_name,"opencl_random-random")) {
 		cl_int error_code;
        		arg->prng = CL_MT_init( context, workgroups_number, rand(), &error_code );
 		CL_CHECK_STATUS(error_code,"Init OpenCL Random");
 		CL_MT_set_kernel_arg( arg->prng, kernel, 0 );
 	}
-	else if(!strcmp(program_name,"park_miller")) {
+	else if(!strcmp(program_name,"park_miller") || !strcmp(program_name,"park_miller-random")) {
 		//TODO: implement this
 	}
 	else {

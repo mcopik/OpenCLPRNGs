@@ -2,8 +2,6 @@
 
 
 
-
-
 __kernel void main(ulong seed,uint count,uint sampleOffset,__global float * result) {
 
 	mwc64x_state_t rng;
