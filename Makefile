@@ -1,6 +1,6 @@
 CC=gcc
 LFLAGS=-lm -lOpenCL
-CFLAGS=-std=c99 -Wall -c
+CFLAGS=-std=c99 -Wall -g -c
 OBJECTS=main.o
 all: main
 
