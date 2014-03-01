@@ -11,7 +11,12 @@ Tested PRNGs:
 
 ## Compiling
 
-Everything is one file `main.c`. You can use `Makefile`, just type `make`.
+Everything is one file `main.c`. You can use `Makefile`, just type:
+
+```
+make
+```
+
 Specifying OpenCL location in `Makefile` may not be necessary.
 
 ## Usage
